@@ -22,6 +22,14 @@ build:
         manual:
           - src: "**/*.js"
             dest: .
+    - image: shiv1610/tickets
+      context: tickets
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "src/**/*.ts"
+            dest: .
 manifests:
   rawYaml:
     - infra/k8s/*

@@ -1,0 +1,57 @@
+import request from "supertest";
+import { app } from "../../app";
+import { Ticket } from "../../model/ticket";
+
+it("has a route handler listening to /api/tickets for post request", async () => {
+  const response = await request(app).post("/api/tickets").send({});
+  expect(response.status).not.toEqual(404);
+});
+it("can only be accessed if user is signed in", async () => {
+  const response = await request(app).post("/api/tickets").send({}).expect(401);
+});
+it("return a status other than 401 if user is signed in", async () => {
+  const response = await request(app)
+    .post("/api/tickets")
+    .set("Cookie", global.ticketJwt())
+    .send({});
+  expect(response.status).not.toEqual(401);
+});
+it("return an error if invalid title is provided", async () => {
+  const response = await request(app)
+    .post("/api/tickets")
+    .set("Cookie", global.ticketJwt())
+    .send({ title: "", price: 10 })
+    .expect(400);
+
+  await request(app)
+    .post("/api/tickets")
+    .set("Cookie", global.ticketJwt())
+    .send({ price: 10 })
+    .expect(400);
+});
+it("return an error if invalid price is provided", async () => {
+  await request(app)
+    .post("/api/tickets")
+    .set("Cookie", global.ticketJwt())
+    .send({ title: "asf", price: -10 })
+    .expect(400);
+  await request(app)
+    .post("/api/tickets")
+    .set("Cookie", global.ticketJwt())
+    .send({ title: "asf" })
+    .expect(400);
+});
+it("create a ticket with valid inputs ", async () => {
+  let tickets = await Ticket.find({});
+  expect(tickets.length).toEqual(0);
+  await request(app)
+    .post("/app/tickets")
+    .set("Cookie", global.ticketJwt())
+    .send({
+      title: "asdf",
+      price: 20,
+    });
+  tickets = await Ticket.find({});
+  console.log(tickets);
+  expect(tickets.length).toEqual(1);
+});
