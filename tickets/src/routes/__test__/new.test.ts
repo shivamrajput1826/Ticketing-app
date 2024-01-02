@@ -45,13 +45,13 @@ it("create a ticket with valid inputs ", async () => {
   let tickets = await Ticket.find({});
   expect(tickets.length).toEqual(0);
   await request(app)
-    .post("/app/tickets")
+    .post("/api/tickets")
     .set("Cookie", global.ticketJwt())
     .send({
-      title: "asdf",
+      title: "asdas",
       price: 20,
-    });
+    })
+    .expect(201);
   tickets = await Ticket.find({});
-  console.log(tickets);
   expect(tickets.length).toEqual(1);
 });

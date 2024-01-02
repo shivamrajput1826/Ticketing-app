@@ -1,11 +1,17 @@
 import express, { Request, Response } from "express";
-import { requireAuth, validateRequest } from "@shiv1610tickets/common";
 import { body } from "express-validator";
+import {
+  NotFoundError,
+  validateRequest,
+  requireAuth,
+  NotAuthorizedError,
+} from "@shiv1610tickets/common";
 import { Ticket } from "../model/ticket";
+
 const router = express.Router();
 
-router.post(
-  "/api/tickets",
+router.put(
+  "/api/tickets/:id",
   requireAuth,
   [
     body("title").not().isEmpty().withMessage("Title is required"),
@@ -15,17 +21,15 @@ router.post(
   ],
   validateRequest,
   async (req: Request, res: Response) => {
-    const { title, price } = req.body;
-
-    const ticket = Ticket.build({
-      title,
-      price,
-      userId: req.currentUser!.id,
-    });
-    await ticket.save();
-
-    res.status(201).send(ticket);
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) {
+      throw new NotFoundError();
+    }
+    if (ticket.userId !== req.currentUser?.id) {
+      throw new NotAuthorizedError();
+    }
+    res.send(ticket);
   }
 );
 
-export { router as createTicketRouter };
+export { router as UpdateTicketRouter };
