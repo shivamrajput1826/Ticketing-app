@@ -5,6 +5,7 @@ import {
   validateRequest,
   requireAuth,
   NotAuthorizedError,
+  BadRequestError,
 } from "@shiv1610tickets/common";
 import { Ticket } from "../model/ticket";
 import { natsWrapper } from "../nats-wrapper";
@@ -27,6 +28,9 @@ router.put(
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) {
       throw new NotFoundError();
+    }
+    if (ticket.orderId) {
+      throw new BadRequestError("Can not edit a reserved ticket");
     }
     if (ticket.userId !== req.currentUser?.id) {
       throw new NotAuthorizedError();
