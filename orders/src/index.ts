@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 import { app } from "./app";
 import { natsWrapper } from "./nats-wrapper";
+import { TicketCreatedEvent } from "@shiv1610tickets/common";
+import { TicketUpdatedEvent } from "@shiv1610tickets/common";
+import { TicketCreatedListener } from "./events/listeners/ticket-created-listener";
+import { TicketUpdatesListener } from "./events/listeners/ticket-updated-listeners";
 
 const start = async () => {
   if (!process.env.JWT_KEY) {
@@ -30,10 +34,12 @@ const start = async () => {
     });
     process.on("SIGINT", () => natsWrapper.client.close());
     process.on("SIGTERM", () => natsWrapper.client.close());
+    new TicketCreatedListener(natsWrapper.client).listen();
+    new TicketUpdatesListener(natsWrapper.client).listen();
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("connected to tickets mongo");
+    console.log("connected to auth mongo");
   } catch (err) {
-    console.log("err while connecting tickets-db", err);
+    console.log("err while connecting auth-db", err);
   }
   app.listen(3000, () => {
     console.log("Listening on Port 3000!!!");

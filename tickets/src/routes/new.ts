@@ -2,6 +2,8 @@ import express, { Request, Response } from "express";
 import { requireAuth, validateRequest } from "@shiv1610tickets/common";
 import { body } from "express-validator";
 import { Ticket } from "../model/ticket";
+import { TicketCreatedPublisher } from "../events/publisher/ticket-created-publisher";
+import { natsWrapper } from "../nats-wrapper";
 const router = express.Router();
 
 router.post(
@@ -23,6 +25,13 @@ router.post(
       userId: req.currentUser!.id,
     });
     await ticket.save();
+    new TicketCreatedPublisher(natsWrapper.client).publish({
+      id: ticket.id,
+      title: ticket.title,
+      price: ticket.price,
+      userId: ticket.userId,
+      version: ticket.version,
+    });
 
     res.status(201).send(ticket);
   }
